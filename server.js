@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // health
-app.get('/', (req, res) => res.send('Hello World'));
+app.get('/', (req, res) => res.send('Hello World! Server is running on localhost'));
 
 // routes
 app.use('/api/contacts', require('./routes/contacts'));
@@ -18,7 +18,10 @@ const PORT = parseInt(process.env.PORT, 10) || 3000;
 
 function startWithRetry(port, maxAttempts = 5) {
   const attempt = (p, remaining) => {
-    const server = app.listen(p, () => console.log(`Server listening on port ${p}`));
+    const server = app.listen(p, () => {
+      console.log(`Server listening on http://localhost:${p}`);
+      console.log(`To access the server, visit: http://localhost:${p}`);
+    });
 
     server.on('error', (err) => {
       if (err && err.code === 'EADDRINUSE') {
@@ -42,6 +45,18 @@ function startWithRetry(port, maxAttempts = 5) {
   attempt(port, maxAttempts);
 }
 
-connectToDB()
-  .then(() => startWithRetry(PORT, 5))
-  .catch(err => console.error('DB connection failed', err));
+// Start server with or without database connection
+async function startServer() {
+  try {
+    await connectToDB();
+    console.log('Starting server with database connection...');
+    startWithRetry(PORT, 5);
+  } catch (err) {
+    console.error('DB connection failed:', err.message);
+    console.log('Starting server without database connection for testing...');
+    console.log('Note: API endpoints that require database will not work.');
+    startWithRetry(PORT, 5);
+  }
+}
+
+startServer();
