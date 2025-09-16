@@ -3,6 +3,9 @@ const express = require('express');
 const cors = require('cors');
 const { connectToDB } = require('./db/conn');
 
+// Load environment variables from repository root first, then from the inner folder (inner overrides)
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
 const app = express();
 app.use(cors());
 app.use(express.json());
